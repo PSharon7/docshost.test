@@ -42,8 +42,8 @@ namespace docshost.test
                 await context.Response.WriteAsync("Hello World!");
                 //await HasBlob();
                 //await FindDoc();
-                await PutBlob();
-                //await PutDoc();
+                //await PutBlob();
+                await PutDoc();
             });
         }
 
@@ -52,8 +52,7 @@ namespace docshost.test
             List<Document> documents = new List<Document>();
             var allfiles = Directory.GetFiles(fileFolder, "*.json", SearchOption.AllDirectories);
 
-            foreach (var file in allfiles)
-            {
+            Parallel.ForEach(allfiles, file => {
                 StreamReader sr = new StreamReader(file);
                 string srContent = sr.ReadToEnd();
                 sr.Close();
@@ -61,17 +60,17 @@ namespace docshost.test
                 dynamic ob = JsonConvert.DeserializeObject(srContent);
                 Document d = new Document
                 {
-                    Locale = ob.locale ?? "en-us",
-                    Url = ob.redirectionUrl ?? "/azure/fake",
-                    Version = version,
-                    Commit = commit,
-                    Blob = "Empty",
-                    Id = ob.id ?? null
+                    locale = ob.locale ?? "en-us",
+                    url = ob.redirectionUrl ?? "/azure/fake",
+                    version = version,
+                    commit = commit,
+                    blob = "Empty",
+                    id = ob.id ?? null
                 };
 
                 documents.Add(d);
-            }
-            
+            });
+
             HttpResponseMessage responseMessage = await httpclient.PutAsJsonAsync(url + "doc", documents);
         }
 
@@ -95,8 +94,7 @@ namespace docshost.test
             List<string> contents = new List<string>();
             var allfiles = Directory.GetFiles(fileFolder, "*.json", SearchOption.AllDirectories);
 
-            foreach (var file in allfiles)
-            {
+            Parallel.ForEach(allfiles, file => {
                 StreamReader sr = new StreamReader(file);
                 string srContent = sr.ReadToEnd();
                 sr.Close();
@@ -104,12 +102,12 @@ namespace docshost.test
                 dynamic ob = JsonConvert.DeserializeObject(srContent);
                 if (ob["content"] == null)
                 {
-                    continue;
+                    return;
                 }
                 string c = ob.content;
 
                 contents.Add(c);
-            }
+            });
 
             HttpResponseMessage responseMessage = await httpclient.PutAsJsonAsync(url + "blob", contents);
               
